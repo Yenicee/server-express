@@ -1,6 +1,13 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
+const bodyParser = require('body-parser');
+const productRouter = require('../src/products.json');
+const cartsRouter = require('../carts.json'); 
+
+app.use(bodyParser.json());
+app.use('/api/products', productRouter);
+app.use('/api/carts', cartsRouter);
 
 class ProductManager {
     constructor(path) {
@@ -80,12 +87,11 @@ class ProductManager {
 
 const productManager = new ProductManager('products.json');
 
-// Agregamos un producto 
-productManager.addProduct('Impresion 3D', 'Consola de 3D', 800, 'imagen1.jpg', 'P1', 5);
+// Definir rutas para productos
+const productsRouter = express.Router();
 
-const PORT = 8080;
-
-app.get('/products', (req, res) => {
+// GET /api/products
+productsRouter.get('/', (req, res) => {
     const limit = parseInt(req.query.limit);
     const products = productManager.products;
 
@@ -96,7 +102,8 @@ app.get('/products', (req, res) => {
     }
 });
 
-app.get('/products/:id', (req, res) => {
+// GET /api/products/:id
+productsRouter.get('/:id', (req, res) => {
     const productId = parseInt(req.params.id);
     const product = productManager.getProduct(productId);
 
@@ -106,6 +113,62 @@ app.get('/products/:id', (req, res) => {
         res.status(404).json({ error: 'Producto no encontrado' });
     }
 });
+
+// POST /api/products
+productsRouter.post('/', (req, res) => {
+    const { title, description, price, thumbnail, code, stock } = req.body;
+    productManager.addProduct(title, description, price, thumbnail, code, stock);
+    res.status(201).json({ message: 'Producto creado con éxito' });
+});
+
+// PUT /api/products/:id
+productsRouter.put('/:id', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const newData = req.body;
+    const updated = productManager.updateProduct(productId, newData);
+    
+    if (updated) {
+        res.json({ message: 'Producto actualizado con éxito' });
+    } else {
+        res.status(404).json({ error: 'Producto no encontrado' });
+    }
+});
+
+// DELETE /api/products/:id
+productsRouter.delete('/:id', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const deleted = productManager.deleteProduct(productId);
+
+    if (deleted) {
+        res.json({ message: 'Producto eliminado con éxito' });
+    } else {
+        res.status(404).json({ error: 'Producto no encontrado' });
+    }
+});
+
+// Muestra el enrutador de productos en /api/products
+app.use('/api/products', productsRouter);
+const cartsRouter = express.Router();
+
+// POST /api/carts
+cartsRouter.post('/', (req, res) => {
+    // Implementa la lógica para crear un nuevo carrito
+});
+
+// GET /api/carts/:cid
+cartsRouter.get('/:cid', (req, res) => {
+    // Implementa la lógica para listar productos en un carrito por CID
+});
+
+// POST /api/carts/:cid/product/:pid
+cartsRouter.post('/:cid/product/:pid', (req, res) => {
+    // Implementa aca la lógica para agregar un producto a un carrito
+});
+
+// Montar el enrutador de carritos en /api/carts
+app.use('/api/carts', cartsRouter);
+
+const PORT = 8080;
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
