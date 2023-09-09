@@ -1,6 +1,22 @@
 const express = require('express');
 const fs = require('fs');
-const productRouter = express.Router();  
+const productRouter = express.Router();
+const ProductManager = require('../managers/ProductManager');
+
+//Agrego productoManager 
+const productManager = new ProductManager('src/products.json');
+
+//Agrego la ruta para mostrar la vista de "home"
+productRouter.get('/views/home', (req, res) => {
+    const products = loadProductsFromFile();
+    res.render('home', { products });
+});
+
+//Agrego ruta para mostrar "realProducts"
+productRouter.get('/views/realProducts', (req, res) => {
+    const products = loadProductsFromFile();
+    res.render('realProducts', { products });
+});
 
 // Función para cargar productos desde el archivo JSON
 function loadProductsFromFile() {
@@ -41,72 +57,41 @@ productRouter.get('/:id', (req, res) => {
     }
 });
 
-// Ruta POST /api/products
-productRouter.post('/', (req, res) => {
-    const { title, description, price, thumbnail, code, stock, status, category } = req.body;
-    const products = loadProductsFromFile();
-
-    // Validar que todos los campos estén presentes
-    if (!title || !description || !price || !thumbnail || !code || !stock || !status || !category) {
-        return res.status(400).json({ error: 'Todos los campos deben estar definidos.' });
-    }
-
-    // Comprobar si ya existe un producto con el mismo código
-    if (products.some(product => product.code === code)) {
-        return res.status(400).json({ error: 'Ya existe un producto con el mismo código.' });
-    }
-
-    // Agregar un nuevo producto
-    const newId = products.length > 0 ? Math.max(...products.map(product => product.id)) + 1 : 1;
-    const newProduct = {
-        id: newId,
-        title,
-        description,
-        price,
-        thumbnail,
-        code,
-        stock,
-        status,
-        category
-    };
-    products.push(newProduct);
-    saveProductsToFile(products);
-
-    res.status(201).json({ message: 'Producto creado con éxito' });
-});
-
 // Ruta PUT /api/products/:id
 productRouter.put('/:id', (req, res) => {
     const productId = parseInt(req.params.id);
     const newData = req.body;
-    const products = loadProductsFromFile();
-    const productIndex = products.findIndex(product => product.id === productId);
 
-    if (productIndex !== -1) {
-        // Actualizar el producto por ID
-        products[productIndex] = { ...products[productIndex], ...newData, id: productId };
-        saveProductsToFile(products);
-        res.json({ message: 'Producto actualizado con éxito' });
-    } else {
-        res.status(404).json({ error: 'Producto no encontrado' });
+    try {
+        // Utiliza el método updateProduct de productManager
+        if (productManager.updateProduct(productId, newData)) {
+            // Actualización exitosa
+            res.json({ message: 'Producto actualizado con éxito' });
+        } else {
+            res.status(404).json({ error: 'Producto no encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error al actualizar el producto' });
     }
 });
 
 // Ruta DELETE /api/products/:id
 productRouter.delete('/:id', (req, res) => {
     const productId = parseInt(req.params.id);
-    const products = loadProductsFromFile();
-    const initialLength = products.length;
 
-    // Eliminar el producto por ID
-    products = products.filter(product => product.id !== productId);
-
-    if (products.length !== initialLength) {
-        saveProductsToFile(products);
-        res.json({ message: 'Producto eliminado con éxito' });
-    } else {
-        res.status(404).json({ error: 'Producto no encontrado' });
+    try {
+        // Utiliza el método deleteProduct de productManager
+        if (productManager.deleteProduct(productId)) {
+           //comentado esto para la proxima entrega
+            // io.emit('updateProducts', products);
+            res.json({ message: 'Producto eliminado con éxito' });
+        } else {
+            res.status(404).json({ error: 'Producto no encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 });
+
 
 module.exports = productRouter;

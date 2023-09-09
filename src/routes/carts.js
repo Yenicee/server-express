@@ -1,11 +1,18 @@
 const express = require('express');
 const fs = require('fs');
 const router = express.Router();
+const CartsManager = require('./managers/cartsManager');
+
+// JSON de carritos
+const cartsFilePath = 'src/carts.json';
+
+// YA ACABO DE CREAR UNA INSTANCIA DE CARTMANAGER
+const cartsManager = new CartsManager();
 
 // Función para cargar carritos desde el archivo JSON
 function loadCartsFromFile() {
-    if (fs.existsSync('src/carts.json')) {
-        const data = fs.readFileSync('carts.json', 'utf8');
+    if (fs.existsSync(cartsFilePath)) {
+        const data = fs.readFileSync(cartsFilePath, 'utf8');
         return JSON.parse(data);
     }
     return [];
@@ -19,14 +26,9 @@ function saveCartsToFile(carts) {
 // Ruta raíz POST /api/carts
 router.post('/', (req, res) => {
     try {
+        const newCart = cartsManager.createCart();
         const carts = loadCartsFromFile();
-        const newCartId = carts.length > 0 ? Math.max(...carts.map(cart => cart.id)) + 1 : 1;
-        const newCart = {
-            id: newCartId,
-            products: []
-        };
-        carts.push(newCart);
-        saveCartsToFile(carts);
+        
         res.status(201).json(newCart);
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el carrito' });
