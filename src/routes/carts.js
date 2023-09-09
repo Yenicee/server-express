@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Función para cargar carritos desde el archivo JSON
 function loadCartsFromFile() {
-    if (fs.existsSync('carts.json')) {
+    if (fs.existsSync('src/carts.json')) {
         const data = fs.readFileSync('carts.json', 'utf8');
         return JSON.parse(data);
     }
@@ -13,13 +13,12 @@ function loadCartsFromFile() {
 
 // Función para guardar carritos en el archivo JSON
 function saveCartsToFile(carts) {
-    fs.writeFileSync('carts.json', JSON.stringify(carts, null, 4));
+    fs.writeFileSync('src/carts.json', JSON.stringify(carts, null, 4));
 }
 
 // Ruta raíz POST /api/carts
 router.post('/', (req, res) => {
     try {
-        // Implementa la lógica para crear un nuevo carrito
         const carts = loadCartsFromFile();
         const newCartId = carts.length > 0 ? Math.max(...carts.map(cart => cart.id)) + 1 : 1;
         const newCart = {
@@ -38,7 +37,6 @@ router.post('/', (req, res) => {
 router.get('/:cid', (req, res) => {
     const cartId = parseInt(req.params.cid);
     try {
-       
         const carts = loadCartsFromFile();
         const cart = carts.find(cart => cart.id === cartId);
 
@@ -55,7 +53,31 @@ router.get('/:cid', (req, res) => {
 // Ruta POST /api/carts/:cid/product/:pid
 router.post('/:cid/product/:pid', (req, res) => {
     try {
-        // Implementa la lógica para agregar un producto a un carrito
+        // Implementar la lógica para agregar un producto a un carrito
+        const carts = loadCartsFromFile();
+        const cartId = parseInt(req.params.cid);
+        const productId = parseInt(req.params.pid);
+        const quantity = parseInt(req.body.quantity);
+
+        const cart = carts.find(cart => cart.id === cartId);
+        if (!cart) {
+            return res.status(404).json({ error: 'Carrito no encontrado' });
+        }
+
+        const productToAdd = {
+            productId,
+            quantity
+        };
+
+        const existingProduct = cart.products.find(item => item.productId === productId);
+        if (existingProduct) {
+            existingProduct.quantity += quantity;
+        } else {
+            cart.products.push(productToAdd);
+        }
+
+        saveCartsToFile(carts);
+        res.status(200).json({ message: 'Producto agregado al carrito con éxito' });
     } catch (error) {
         res.status(500).json({ error: 'Error al agregar el producto al carrito' });
     }

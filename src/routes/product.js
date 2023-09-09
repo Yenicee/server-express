@@ -1,11 +1,11 @@
 const express = require('express');
 const fs = require('fs');
-const productRouter = express.Router();
+const productRouter = express.Router();  
 
 // Función para cargar productos desde el archivo JSON
 function loadProductsFromFile() {
-    if (fs.existsSync('products.json')) {
-        const data = fs.readFileSync('products.json', 'utf8');
+    if (fs.existsSync('src/products.json')) {
+        const data = fs.readFileSync('src/products.json', 'utf8');
         return JSON.parse(data);
     }
     return [];
@@ -13,7 +13,7 @@ function loadProductsFromFile() {
 
 // Función para guardar productos en el archivo JSON
 function saveProductsToFile(products) {
-    fs.writeFileSync('products.json', JSON.stringify(products, null, 4));
+    fs.writeFileSync('src/products.json', JSON.stringify(products, null, 4));
 }
 
 // Ruta raíz GET /api/products
@@ -43,12 +43,20 @@ productRouter.get('/:id', (req, res) => {
 
 // Ruta POST /api/products
 productRouter.post('/', (req, res) => {
-    const { title, description, price, thumbnail, code, stock } = req.body;
+    const { title, description, price, thumbnail, code, stock, status, category } = req.body;
     const products = loadProductsFromFile();
 
-    // Implementa la lógica para agregar un nuevo producto
-    // Asegúrate de validar los campos y generar un ID único
-    // Agrega el nuevo producto al array de productos y guarda los cambios
+    // Validar que todos los campos estén presentes
+    if (!title || !description || !price || !thumbnail || !code || !stock || !status || !category) {
+        return res.status(400).json({ error: 'Todos los campos deben estar definidos.' });
+    }
+
+    // Comprobar si ya existe un producto con el mismo código
+    if (products.some(product => product.code === code)) {
+        return res.status(400).json({ error: 'Ya existe un producto con el mismo código.' });
+    }
+
+    // Agregar un nuevo producto
     const newId = products.length > 0 ? Math.max(...products.map(product => product.id)) + 1 : 1;
     const newProduct = {
         id: newId,
@@ -57,11 +65,13 @@ productRouter.post('/', (req, res) => {
         price,
         thumbnail,
         code,
-        stock
+        stock,
+        status,
+        category
     };
     products.push(newProduct);
     saveProductsToFile(products);
-    
+
     res.status(201).json({ message: 'Producto creado con éxito' });
 });
 
@@ -73,8 +83,7 @@ productRouter.put('/:id', (req, res) => {
     const productIndex = products.findIndex(product => product.id === productId);
 
     if (productIndex !== -1) {
-        // Implementa la lógica para actualizar un producto por ID
-        // Actualiza los campos del producto y guarda los cambios
+        // Actualizar el producto por ID
         products[productIndex] = { ...products[productIndex], ...newData, id: productId };
         saveProductsToFile(products);
         res.json({ message: 'Producto actualizado con éxito' });
@@ -88,11 +97,10 @@ productRouter.delete('/:id', (req, res) => {
     const productId = parseInt(req.params.id);
     const products = loadProductsFromFile();
     const initialLength = products.length;
-    
-    // Implementa la lógica para eliminar un producto por ID
-    // Filtra los productos y guarda la lista actualizada sin el producto eliminado
+
+    // Eliminar el producto por ID
     products = products.filter(product => product.id !== productId);
-    
+
     if (products.length !== initialLength) {
         saveProductsToFile(products);
         res.json({ message: 'Producto eliminado con éxito' });
