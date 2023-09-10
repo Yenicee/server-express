@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 class ProductManager {
     constructor(path) {
         this.path = path;
@@ -110,3 +112,4 @@ if (productManager.deleteProduct(productId)) {
     console.log('Producto no encontrado para eliminar.');
 }
 
+module.exports = ProductManager;

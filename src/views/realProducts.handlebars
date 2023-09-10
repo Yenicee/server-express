@@ -1,30 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
- <title>Lista de Productos en Tiempo Real</title>
+    <title>Lista de Productos en Tiempo Real</title>
 </head>
+
 <body>
     <h1>Lista de Productos en Tiempo Real</h1>
-    <ul>
+    <ul id="product-list">
         {{#each products}}
         <li>{{this.title}} - {{this.price}}</li>
         {{/each}}
     </ul>
+
+    <form id="product-form">
+        <input type="text" id="title" placeholder="Título">
+        <input type="text" id="price" placeholder="Precio">
+        <button type="submit">Agregar Producto</button>
+    </form>
+
     <script src="/socket.io/socket.io.js"></script>
+    <script src="../public/index.js"></script>
     <script>
         const socket = io();
-        
-        // Escuchar el evento 'updateProducts' y actualizar la lista de productos
-        socket.on('updateProducts', (products) => {
-            const productList = document.querySelector('ul');
-            productList.innerHTML = '';
-            
-            products.forEach((product) => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${product.title} - ${product.price}`;
-                productList.appendChild(listItem);
-            });
+
+        // Escuchar evento para actualizar la lista de productos en tiempo real
+        socket.on('updatedProducts', (data) => {
+            const productList = document.getElementById('product-list');
+            // Actualiza la lista de productos con los datos recibidos  
+        });
+
+        // Manejar el envío del formulario de creación de productos
+        const productForm = document.getElementById('product-form');
+        productForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const price = document.getElementById('price').value;
+
+            // Enviar datos del nuevo producto al servidor (WebSocket)
+            socket.emit('createProduct', { title, price });
+
+            // Limpia los campos después de enviar
+            document.getElementById('title').value = '';
+            document.getElementById('price').value = '';
         });
     </script>
 </body>
+
 </html>

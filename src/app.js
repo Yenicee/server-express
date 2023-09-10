@@ -1,19 +1,25 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require("socket.io");
-const fs = require('fs');
-const handlebars = 'express-handlebars';
-const app = express();
+const socketIo = require('socket.io');
+const handlebars = require('express-handlebars');
 const bodyParser = require('body-parser');
-const productRouter = require('./routes/product'); 
-const cartsRouter = require('./routes/carts'); 
+const { Server } = require('socket.io');
+const fs = require('fs');
+const path = require('path');
 
-// Configura el motor de plantillas Handlebars
-//app.engine('handlebars', handlebars.engine());
-app.set('views', __dirname+'/views')
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Configuración de Handlebars como motor de plantillas
 app.set('view engine', 'handlebars');
+app.set('views', __dirname+'/views');
+app.use(express.static(path.join(__dirname, 'public')));
+app.engine('handlebars', handlebars.create());
 
-app.use(bodyParser.json());
+
+AudioParamMap.set('view engine', 'handlebars');
 
 // Ruta para mostrar la vista de inicio
 app.get('/home', (req, res) => {
@@ -22,14 +28,15 @@ app.get('/home', (req, res) => {
 });
 
 // Monta los enrutadores en sus rutas respectivas
+const productRouter = require('./routes/product'); 
+const cartsRouter = require('./routes/carts'); 
+
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartsRouter);
 
-const server = http.createServer(app);
-const io = new Server(server);
-
 const PORT = 8080;
 
-server.listen(PORT, () => {
+Server.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+
