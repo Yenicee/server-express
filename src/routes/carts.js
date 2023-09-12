@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const router = express.Router();
-const CartsManager = require('./managers/cartsManager');
+const CartsManager = require ('../managers/cartManager');
 
 // JSON de carritos
 const cartsFilePath = 'src/carts.json';
@@ -55,7 +55,6 @@ router.get('/:cid', (req, res) => {
 // Ruta POST /api/carts/:cid/product/:pid
 router.post('/:cid/product/:pid', (req, res) => {
     try {
-        // Implementar la lógica para agregar un producto a un carrito
         const carts = loadCartsFromFile();
         const cartId = parseInt(req.params.cid);
         const productId = parseInt(req.params.pid);
@@ -64,6 +63,11 @@ router.post('/:cid/product/:pid', (req, res) => {
         const cart = carts.find(cart => cart.id === cartId);
         if (!cart) {
             return res.status(404).json({ error: 'Carrito no encontrado' });
+        }
+        // Validar si el producto existe antes de agregarlo
+        const productExists = cart.products.some(item => item.productId === productId);
+        if (!productExists) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
         const productToAdd = {
