@@ -54,6 +54,10 @@ class ProductManager {
         return newId;
     }
 
+    getProducts() {
+        return this.products;
+      }
+      
     getProduct(productId) {
         return this.products.find(product => product.id === productId);
     }
