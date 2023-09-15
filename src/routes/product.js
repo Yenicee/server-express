@@ -78,14 +78,14 @@ productRouter.post('/', (req, res) => {
             code,
             stock,
             category,
-            status 
+            status
         );
-        // Verificar si newProduct es undefined y devolver un 400 si lo es.
-        if (!newProduct) {
-            return res.status(400).json({ error: 'Error al crear el producto' });
+        // Verificar si la operación fue exitosa y devolver un 200 o 400 en consecuencia.
+        if (success) {
+            res.status(200).json({ message: 'Producto creado con éxito' });
+        } else {
+            res.status(400).json({ error: 'Error al crear el producto' });
         }
-
-        res.status(201).json({ message: 'Producto creado con éxito' });
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el producto' });
     }

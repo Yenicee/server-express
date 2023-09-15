@@ -32,8 +32,10 @@ function saveCartsToFile(carts) {
 // Ruta raíz POST /api/carts
 router.post('/', (req, res) => {
     try {
-        const newCart = cartsManager.createCart();
         const carts = loadCartsFromFile();
+        // Verificar si ya existe un carrito con el mismo ID
+        const newCartId = carts.reduce((maxId, cart) => Math.max(maxId, cart.id), 0) + 1;
+        const newCart = cartsManager.createCart(newCartId);
 
         carts.push(newCart);
         saveCartsToFile(carts);
@@ -76,9 +78,17 @@ router.post('/:cid/product/:pid', (req, res) => {
             return res.status(404).json({ error: 'Carrito no encontrado' });
         }
 
+        // Cargar la lista de productos desde el archivo
+        const products = loadProductsFromFile();
+        const product = products.find(product => product.id === productId);
+
+        if (!product) {
+            return res.status(400).json({ error: 'Producto no encontrado' });
+        }
+
         const productExists = cart.products.some(item => item.productId === productId);
         if (!productExists) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
+            return res.status(404).json({ error: 'Producto no encontrado en el carrito' });
         }
 
         const existingProduct = cart.products.find(item => item.productId === productId);

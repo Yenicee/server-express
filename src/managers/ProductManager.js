@@ -21,12 +21,12 @@ class ProductManager {
     addProduct(title, description, price, thumbnail, code, stock, status, category) {
         if (!title || !description || !price || !thumbnail || !code || !stock || !status  || !category) {
             console.log('Todos los campos deben estar definidos.');
-            return;
+            return false;
         }
 
         if (this.products.some(product => product.code === code)) {
             console.log('Ya existe un producto con el mismo código.');
-            return;
+            return false;
         }
 
         const newId = this.generateUniqueId();
@@ -43,6 +43,9 @@ class ProductManager {
         };
         this.products.push(newProduct);
         this.saveData();
+
+        return true;
+        
     }
 
 
