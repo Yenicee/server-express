@@ -81,7 +81,7 @@ productRouter.post('/', (req, res) => {
             status
         );
         // Verificar si la operación fue exitosa y devolver un 200 o 400 en consecuencia.
-        if (success) {
+        if (newProduct) {
             res.status(200).json({ message: 'Producto creado con éxito' });
         } else {
             res.status(400).json({ error: 'Error al crear el producto' });
